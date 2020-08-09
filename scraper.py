@@ -7,8 +7,8 @@ import csv
 # メイン
 def main():
     # TODO read csv
-    url_list = ["https://mariegohan.com/6841", "https://mariegohan.com/5328"]
-    # url_list = ["https://cookien.com/recipe/22918/", "https://cookien.com/recipe/1557/"]
+    # url_list = ["https://mariegohan.com/6841", "https://mariegohan.com/5328"]
+    url_list = ["https://cookien.com/recipe/22918/", "https://cookien.com/recipe/1557/"]
     # url_list = ["https://mayukitchen.com/komatsuna-fried-tofu-chinese-sauce/"]
 
     csv_list = []
@@ -40,18 +40,32 @@ def scrape2array(url):
 # スクレイピング：cookien.com
 def scrape_cookien(url):
     body = []
-    soup = BeautifulSoup(requests.get(url).content, "html.parser")
+    html = requests.get(url).content
+    soup = BeautifulSoup(html, "html.parser")
+    base = soup.select_one("div#r_contents")
 
     # 記事URL
     body.append(url)
 
     # レシピ名
+    name = soup.select('h1.entry-title')[0].text.strip()
+    body.append(name)
 
     # 画像URL
+    img = soup.select_one("div.entry-content").select_one("img").get("src")
+    body.append(img)
 
     # 人数
+    num_people = base.h2.select_one("span.addexp").string
+    body.append(num_people)
 
     # 材料
+    tmp_ingredient = ""
+    contents_ingredients = base.find_all("p")
+    for line in contents_ingredients:
+        tmp_ingredient += line.get_text() + '\n'
+
+    body.append(tmp_ingredient)
 
     return body
 
