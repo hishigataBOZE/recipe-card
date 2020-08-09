@@ -3,11 +3,30 @@ from bs4 import BeautifulSoup
 import re
 import csv
 
+
+# メイン
+def main():
+    # TODO read csv
+    url_list = ["https://mariegohan.com/6841", "https://mariegohan.com/5328"]
+    # url_list = ["https://cookien.com/recipe/22918/", "https://cookien.com/recipe/1557/"]
+    # url_list = ["https://mayukitchen.com/komatsuna-fried-tofu-chinese-sauce/"]
+
+    csv_list = []
+    header = ['#URL', 'タイトル', '画像URL', '人数', '材料']
+    csv_list.append(header)
+
+    for url in url_list:
+        csv_list.append(scrape2array(url))
+
+    # CSV出力
+    # print(csv_list)
+    with open('./output/recipe_scraped.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(csv_list)
+
+
 # スクレイピングして配列化
 def scrape2array(url):
-    html = requests.get(url)
-    soup = BeautifulSoup(html.content, "html.parser")
-
     url2func = {'mariegohan.com': 'scrape_mariegohan',
                 'cookien.com': 'scrape_cookien',
                 'mayukitchen.com': 'scrape_mayukitchen'}
@@ -15,11 +34,12 @@ def scrape2array(url):
     # サイトごとのスクレイピング実行
     for uri, func in url2func.items():
         if uri in url:
-            return eval(func)(soup)
+            return eval(func)(url)
 
 
 # スクレイピング：mariegohan
-def scrape_mariegohan(soup):
+def scrape_mariegohan(url):
+    soup = BeautifulSoup(requests.get(url).content, "html.parser")
     title_ingredients = soup.find(class_="ingredients")
     body = []
 
@@ -51,21 +71,5 @@ def scrape_mariegohan(soup):
 
     return body
 
-# メイン
-# TODO read csv
-url_list = ["https://mariegohan.com/6841", "https://mariegohan.com/5328"]
-# url_list = ["https://cookien.com/recipe/22918/", "https://cookien.com/recipe/1557/"]
-# url_list = ["https://mayukitchen.com/komatsuna-fried-tofu-chinese-sauce/"]
 
-csv_list = []
-header = ['#URL', 'タイトル', '画像URL', '人数', '材料']
-csv_list.append(header)
-
-for url in url_list:
-    csv_list.append(scrape2array(url))
-
-# CSV出力
-# print(csv_list)
-with open('./output/recipe_scraped.csv', 'w') as f:
-    writer = csv.writer(f)
-    writer.writerows(csv_list)
+main()
