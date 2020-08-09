@@ -243,6 +243,6 @@ dmypy.json
 
 # Custom
 data/
-
+output/
 
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm
