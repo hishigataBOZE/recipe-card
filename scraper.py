@@ -10,11 +10,14 @@ def scrape2array(url):
     title_ingredients = soup.find(class_="ingredients")
     body = []
 
+    # 記事URL
+    body.append(url)
+
     # レシピ名
     title_recipe = soup.find(class_="entry-title")
     body.append(title_recipe.string)
 
-    # 画像
+    # 画像URL
     img = soup.section.img.get('data-src')
     body.append(img)
 
@@ -23,7 +26,7 @@ def scrape2array(url):
     num_people = re.search(r'(人数：.+)$', num_people_content.string)
     body.append(num_people.group())
 
-    # 材料取得
+    # 材料
     contents_ingredients = title_ingredients.next_sibling.next_sibling.contents
 
     tmp_ingredient = ''
@@ -36,10 +39,11 @@ def scrape2array(url):
     return body
 
 
+# TODO read csv
 url_list = ["https://mariegohan.com/6841", "https://mariegohan.com/5328"]
 
 csv_list = []
-header = ['#タイトル', '画像URL', '人数', '材料']
+header = ['#URL', 'タイトル', '画像URL', '人数', '材料']
 csv_list.append(header)
 
 for url in url_list:
