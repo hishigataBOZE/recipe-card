@@ -37,11 +37,49 @@ def scrape2array(url):
             return eval(func)(url)
 
 
+# スクレイピング：cookien.com
+def scrape_cookien(url):
+    body = []
+    soup = BeautifulSoup(requests.get(url).content, "html.parser")
+
+    # 記事URL
+    body.append(url)
+
+    # レシピ名
+
+    # 画像URL
+
+    # 人数
+
+    # 材料
+
+    return body
+
+
+# スクレイピング：mayukitchen.com
+def scrape_mayukitchen(url):
+    body = []
+    soup = BeautifulSoup(requests.get(url).content, "html.parser")
+
+    # 記事URL
+    body.append(url)
+
+    # レシピ名
+
+    # 画像URL
+
+    # 人数
+
+    # 材料
+
+    return body
+
+
 # スクレイピング：mariegohan
 def scrape_mariegohan(url):
+    body = []
     soup = BeautifulSoup(requests.get(url).content, "html.parser")
     title_ingredients = soup.find(class_="ingredients")
-    body = []
 
     # 記事URL
     body.append(url)
