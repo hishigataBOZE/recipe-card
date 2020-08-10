@@ -8,8 +8,8 @@ import csv
 def main():
     # TODO read csv
     # url_list = ["https://mariegohan.com/6841", "https://mariegohan.com/5328"]
-    url_list = ["https://cookien.com/recipe/22918/", "https://cookien.com/recipe/1557/"]
-    # url_list = ["https://mayukitchen.com/komatsuna-fried-tofu-chinese-sauce/"]
+    # url_list = ["https://cookien.com/recipe/22918/", "https://cookien.com/recipe/1557/"]
+    url_list = ["https://mayukitchen.com/komatsuna-fried-tofu-chinese-sauce/"]
 
     csv_list = []
     header = ['#URL', 'タイトル', '画像URL', '人数', '材料']
@@ -73,18 +73,34 @@ def scrape_cookien(url):
 # スクレイピング：mayukitchen.com
 def scrape_mayukitchen(url):
     body = []
-    soup = BeautifulSoup(requests.get(url).content, "html.parser")
+    html = requests.get(url).content
+    soup = BeautifulSoup(html, "html.parser")
+    base = soup.select_one("div.entry-content").select_one('h2')
+    # next_sibling2つで4人分の位置。3つで8人分の位置
+    base = base.next_sibling.next_sibling.next_sibling
 
     # 記事URL
     body.append(url)
 
     # レシピ名
+    name = soup.select_one('h1.entry-title').text.strip()
+    body.append(name)
 
     # 画像URL
+    img = soup.select_one("div.entry-content").select_one("img").get("src")
+    body.append(img)
 
     # 人数
+    base_num = base.p.span.text
+    body.append(base_num)
 
     # 材料
+    tmp_ind = ""
+    base_ind = base.ul.find_all("li")
+    for ind in base_ind:
+        if ind.string != "\n":
+            tmp_ind += ind.string + "\n"
+    body.append(tmp_ind)
 
     return body
 
