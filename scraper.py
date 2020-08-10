@@ -6,15 +6,15 @@ from urllib.parse import urlparse
 import qrcode
 import pathlib
 import os
-import shutil
-
+import glob
 
 # メイン
 def main():
     # 出力ディレクトリお掃除
     output_dir = "./output/"
-    shutil.rmtree(output_dir)
-    os.mkdir(output_dir)
+    rm_targets = glob.glob(output_dir + "**.png")
+    for tg in rm_targets:
+        os.remove(tg)
 
     # 出力準備
     header = ['#No', 'URL', 'タイトル', '画像URL', '人数', '材料', 'QRコード画像']
