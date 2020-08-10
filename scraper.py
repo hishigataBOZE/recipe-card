@@ -3,27 +3,62 @@ from bs4 import BeautifulSoup
 import re
 import csv
 from urllib.parse import urlparse
+import qrcode
+import pathlib
+import os
+import shutil
 
 
 # メイン
 def main():
-    # TODO read csv
-    # url_list = ["https://mariegohan.com/6841", "https://mariegohan.com/5328"]
-    # url_list = ["https://cookien.com/recipe/22918/", "https://cookien.com/recipe/1557/"]
-    url_list = ["https://mayukitchen.com/komatsuna-fried-tofu-chinese-sauce/"]
+    # 出力ディレクトリお掃除
+    output_dir = "./output/"
+    shutil.rmtree(output_dir)
+    os.mkdir(output_dir)
 
+    # 出力準備
+    header = ['#No', 'URL', 'タイトル', '画像URL', '人数', '材料', 'QRコード画像']
     csv_list = []
-    header = ['#URL', 'タイトル', '画像URL', '人数', '材料']
     csv_list.append(header)
 
-    for url in url_list:
-        csv_list.append(scrape2array(url))
+    # URL読み込み
+    with open('./data/url_list.csv', 'r') as f:
+        next(csv.reader(f))
+        reader = csv.reader(f)
+        for row in reader:
+            csv_line = []
+            no = row[0]
+            url = row[1]
+            csv_line.append(no)
+            csv_line.extend([url])
+            scraped_rows = scrape2array(url)
+            if scraped_rows:
+                qr_abs_path = qr_save(url, output_dir + no.zfill(3) + '.png')
+                csv_line.extend(scraped_rows)
+                csv_line.extend([qr_abs_path])
+            print(csv_line)
+            csv_list.append(csv_line)
+
+    print(csv_list)
+    # return
+
+    # DEBUG
+    # url_list = ["https://mariegohan.com/6841", "https://mariegohan.com/5328"]
+    # url_list = ["https://cookien.com/recipe/22918/", "https://cookien.com/recipe/1557/"]
+    # url_list = [["1", "https://mayukitchen.com/komatsuna-fried-tofu-chinese-sauce/"]]
 
     # CSV出力
     # print(csv_list)
     with open('./output/recipe_scraped.csv', 'w') as f:
         writer = csv.writer(f)
         writer.writerows(csv_list)
+
+
+# QRコードを保存したら絶対パスを返す
+def qr_save(url, qr_path):
+    img = qrcode.make(url)
+    img.save(qr_path)
+    return str(pathlib.Path(qr_path).resolve())
 
 
 # スクレイピングして配列化
@@ -36,6 +71,8 @@ def scrape2array(url):
     for uri, func in url2func.items():
         if uri in url:
             return eval(func)(url)
+        else:
+            return False
 
 
 # スクレイピング：cookien.com
@@ -44,9 +81,6 @@ def scrape_cookien(url):
     html = requests.get(url).content
     soup = BeautifulSoup(html, "html.parser")
     base = soup.select_one("div#r_contents")
-
-    # 記事URL
-    body.append(url)
 
     # レシピ名
     name = soup.select('h1.entry-title')[0].text.strip()
@@ -80,9 +114,6 @@ def scrape_mayukitchen(url):
     # next_sibling2つで4人分の位置。3つで8人分の位置
     base = base.next_sibling.next_sibling.next_sibling
 
-    # 記事URL
-    body.append(url)
-
     # レシピ名
     name = soup.select_one('h1.entry-title').text.strip()
     body.append(name)
@@ -114,9 +145,6 @@ def scrape_mariegohan(url):
     soup = BeautifulSoup(requests.get(url).content, "html.parser")
     title_ingredients = soup.find(class_="ingredients")
 
-    # 記事URL
-    body.append(url)
-
     # レシピ名
     title_recipe = soup.find(class_="entry-title")
     body.append(title_recipe.string)
@@ -126,9 +154,13 @@ def scrape_mariegohan(url):
     body.append(img)
 
     # 人数
-    num_people_content = title_ingredients.previous_sibling.previous_sibling
-    num_people = re.search(r'(人数：.+)$', num_people_content.string)
-    body.append(num_people.group())
+    try:
+        num_people_content = title_ingredients.previous_sibling.previous_sibling
+        num_people = re.search(r'(人数.+)$', num_people_content.string)
+        num_people_res = num_people.group()
+    except:
+        num_people_res = ""
+    body.append(num_people_res)
 
     # 材料
     contents_ingredients = title_ingredients.next_sibling.next_sibling.contents
