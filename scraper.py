@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import csv
+from urllib.parse import urlparse
 
 
 # メイン
@@ -88,7 +89,9 @@ def scrape_mayukitchen(url):
 
     # 画像URL
     img = soup.select_one("div.entry-content").select_one("img").get("src")
-    body.append(img)
+    parsed_url = '{uri.scheme}://{uri.netloc}'.format(uri=urlparse(url))
+    # 相対パス→絶対パスに変換
+    body.append(parsed_url + img)
 
     # 人数
     base_num = base.p.span.text
